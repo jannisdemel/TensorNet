@@ -8,7 +8,6 @@
 
 import torch
 import torch.nn as nn
-from mldft.ml.models.components.density_coeff_embedding import AtomHotEmbedding
 from torchmdnet.models.utils import OptimizedDistance
 
 __all__=['TensorNet'] # if someone imports * from this module, they will only get TensorNet
@@ -20,8 +19,6 @@ class TensorNet(nn.Module):
 
     Parameters:
     -----------
-    basis_info: BasisInfo
-        Object containing the basis information.
     hidden_channels: int
         Number of hidden channels. Default is 128.
     num_layers: int
@@ -51,7 +48,6 @@ class TensorNet(nn.Module):
         Data type of the tensors. Default is torch.float32.
     '''
     def __init__(self,
-                 basis_info,
                  hidden_channels = 128,
                  num_layers = 2,
                  max_z = 128,
@@ -126,11 +122,6 @@ class TensorNet(nn.Module):
             self.max_z,
             self.dtype)
         
-        # define atom hot embedding for including density
-        # the dimesnionality of the embedding is the sum of all basis function of all atom types
-        self.atom_hot_embedding = AtomHotEmbedding(sum(basis_info.basis_dim_per_atom))
-        # Linear layer for the atom hot embedding
-        self.Linear_atom_hot = nn.Linear(sum(basis_info.basis_dim_per_atom), self.hidden_channels, dtype=self.dtype)
 
         # define the interaction layers
         self.layers = nn.ModuleList()
@@ -205,17 +196,6 @@ class TensorNet(nn.Module):
 
         # now we get to the embedding part as descibed in the paper
         X = self.tensor_embedding(z, edge_index, edge_weight, edge_vec, edge_attr)
-
-        # now we want to include the density as well, which is not done in the paper
-        # first we embed the local frames coefficients 
-        atom_hot_embedding = self.atom_hot_embedding(batch_input.coeffs, batch_input.basis_function_ind, batch_input.n_basis_per_atom, batch_input.coeff_ind_to_node_ind)
-        # linear layer to get to correct shape
-        dens_embedding = self.Linear_atom_hot(atom_hot_embedding).unsqueeze(-1).unsqueeze(-1)
-        # add ghost atom
-        if self.static_shapes:
-            dens_embedding = torch.cat((dens_embedding, torch.zeros(1, self.hidden_channels, 1, 1, device=dens_embedding.device, dtype=dens_embedding.dtype)), dim=0)
-        # multiply atomwise with the density embedding
-        X = X * dens_embedding
         
         # interaction and node update
         for layer in self.layers:
