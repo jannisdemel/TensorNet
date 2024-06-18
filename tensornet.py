@@ -215,7 +215,7 @@ class TensorNet(nn.Module):
         U_i.index_add_(0, batch, x)
         # sum over channels
         U = torch.sum(U_i, dim=1) 
-        return U, torch.zeros_like(batch_input.coeffs)
+        return U
     
     def reset_parameters(self):
         """
