@@ -156,8 +156,6 @@ class TensorNet(nn.Module):
              - atom_ind (torch.tensor): Tensor of shape [N] containing the atomic numbers (not the real ones but starting from 0).
              - pos (torch.tensor): Tensor of shape [N,3] containing the atomic positions.
              - batch (torch.tensor): Tensor of shape [N] containing the batch indices, telling which atom belongs to which molecule. The batch indices are sorted in ascending order from 0 to M-1.
-             - coeffs (torch.tensor): Tensor containing the coefficients of the local frames.
-             - basis_function_ind, n_basis_per_atom, coeff_ind_to_node_ind: will be used for Atom hot embedding
         
         Returns:
         --------
