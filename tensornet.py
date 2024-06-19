@@ -312,7 +312,7 @@ def decompose_tensor(X):
 
 def tensor_norm(tensor):
     """
-    Computes squared Tr(X^T X) for a tensor X.
+    Computes (squared) Tr(X^T X) for a tensor X.
     This is the squared Frobenisu norm but in the paper it is understood as the tensor norm ||X||.
 
     Parameters:
@@ -322,9 +322,11 @@ def tensor_norm(tensor):
     
     Returns:
     --------
-    torch.tensor: Tensor containing the squared tensor norm.
+    torch.tensor: Tensor containing the norm.
     """
-    return (tensor**2).sum((-2, -1))
+    # the original implementation returns (tensor**2).sum((-2, -1)) which is the squred Frobenius norm. In the paper they call this ||X|| and not
+    # ||X||^2 so I changed it to the (not squred) Frobenius norm
+    return torch.norm(tensor, p='fro', dim=(-2, -1))
 
 class ExpNormalSmearing(nn.Module):
     r'''
@@ -385,10 +387,12 @@ class ExpNormalSmearing(nn.Module):
 
     def forward(self, dist):
         '''
-        Applies the radial basis functions to the distances. Notably, it also applies the cosine cutoff function, which is not shown in formula (6) of the paper.
+        Applies the radial basis functions to the distances.
         '''
         dist = dist.unsqueeze(-1)
-        return self.cutoff_fn(dist) * torch.exp(-self.betas * (torch.exp(self.alpha * (-dist + self.cutoff_lower)) - self.means) ** 2)
+        expansion = torch.exp(-self.betas * (torch.exp(self.alpha * (-dist + self.cutoff_lower)) - self.means) ** 2)
+        # the original implementation now returns self.cutoff_fn(dist) * expansion, but this contradicts formula (6) in the paper so I did not include it
+        return expansion 
     
 class CosineCutoff(nn.Module):
     r'''
