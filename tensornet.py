@@ -178,8 +178,9 @@ class TensorNet(nn.Module):
             # I trick the model into thinking that the masked edges pertain to the extra atom with index N=z.shape[0]
             # WARNING: This can hurt performance if max_num_pairs >> actual_num_pairs
             edge_index = edge_index.masked_fill(mask, z.shape[0])
-            edge_weight = edge_weight.masked_fill(mask[0], 0)
-            edge_vec = edge_vec.masked_fill(mask[0].unsqueeze(-1).expand_as(edge_vec), 0)
+            # The next two lines are commented because as far as I can see they do not do anything, but they are for some reason part of the origonal code
+            # edge_weight_n = edge_weight.masked_fill(mask[0], 0)
+            # edge_vec_n = edge_vec.masked_fill(mask[0].unsqueeze(-1).expand_as(edge_vec), 0)
             # Since we now have N+1 atoms, we need to add the ghost atom to the atomic numbers and choose 0 
             z = torch.cat((z, torch.zeros(1, device=z.device, dtype=z.dtype)), dim=0)
 
