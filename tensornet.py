@@ -188,7 +188,7 @@ class TensorNet(nn.Module):
         # edge_attr will add a dimension 1 with num_rbf elements to edge_weight
         edge_attr = self.distance_expansion(edge_weight)
 
-        # we need to normalize the edge vectors. Just dividing them by their length will lead to NaNs since there are edges with length 0 (the ghost atom has self-loops)
+        # we need to normalize the edge vectors. Just dividing them by their length will lead to NaNs since there are edges with length 0 
         # therefore, all self-loops get a weight of 1 which allows dividing by the length
         mask_self_loops = edge_index[0] == edge_index[1]
         edge_vec = edge_vec / edge_weight.masked_fill(mask_self_loops, 1).unsqueeze(1)
@@ -577,7 +577,9 @@ class TensorEmbedding(nn.Module):
         torch.tensor: Tensor of shape [num_pairs,hidden_channels,1,1] containing the atomic number message.
         '''
         # create an embedding of the atomic numbers 
+        print('z',z)
         Z = self.emb(z)
+        print('Z',Z)
         # for every edge (ij) we map with a linear layer the concatenation of Z_i and Z_j to n pair-wise invariant representations Z_ij 
         Zij = self.emb2(Z.index_select(0, edge_index.t().reshape(-1)).view(-1, self.hidden_channels * 2 ))[..., None, None]
         return Zij
